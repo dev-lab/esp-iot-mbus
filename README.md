@@ -8,7 +8,7 @@ This device hosts a web server and an M-Bus gateway and allows to communicate wi
 * Allows to scan the M-Bus network for connected M-Bus devices (**Devices** tab on the web page).
 * M-Bus gateway can have multiple consumption meters connected to the M-Bus network, and these M-Bus devices can be added/configured through the web interface;
 * Ability to send raw commands via M-Bus (optionally enriched with a calculated checksum, and formatted into an M-Bus datagram) from the web interface (**M-Bus** on the web page);
-* M-Bus capabilities are provided by the [tmbus library](https://dev-lab.github.com/tmbus) which is deployed on NodeMCU as part of the M-Bus gateway software. Check its capabilities online: [Live M-Bus datagram decoder](https://dev-lab.github.io/tmbus/tmbus.htm).
+* M-Bus capabilities are provided by the [tmbus library](https://github.com/dev-lab/tmbus) which is deployed on NodeMCU as part of the M-Bus gateway software. Check its capabilities online: [Live M-Bus datagram decoder](https://dev-lab.github.io/tmbus/tmbus.htm).
 
 *The following features are derived from [the platform](https://github.com/dev-lab/bare-esp-iot-generic-switch) on which project is based*:
 
