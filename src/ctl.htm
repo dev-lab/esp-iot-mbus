@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<head>
+<meta charset=utf-8>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {box-sizing:border-box}
+body {font-family:Arial,sans-serif; background:#000; color:#88D}
+table {max-width:50rem;	width:100%}
+td {min-width:0.5rem}
+tr:nth-child(even) {background:#111}
+th {background:blue; color:#fff}
+#ld {position:absolute; left:50%; top:50%; border-radius:50%; border: 1rem solid #55EA; margin: -3rem 0 0 -3rem; -webkit-mask: linear-gradient(#FFF1, #000E, #FFF1); width: 6rem; height: 6rem; animation: spin 1s linear infinite}
+@keyframes spin {0% {transform: rotate(0deg)} 100% {transform: rotate(360deg)}}
+@media only screen and (max-width:30rem) {body {margin:0}}
+</style>
+<title>Control</title>
+<script>
+
+var H = ["Storage", "Device", "Tariff"];
+
+function tMbus(data, u, filter) {
+
+var raw = tmbus(data);
+unitConv(u, function(d) {
+	if(d.unit == "days" && d.value > 364) {
+		d.value = p10(Math.round(d.value/36.5), -1);
+		d.unit = "years";
+	}
+}).process(raw);
+var m = [0, 0, 0], ml = ln(H) - 1, r = {h: {}, s: {}};
+
+function c(v, i, h) {
+	if(!v[i = i || 0]) {
+		v[i] = h < ml ? {} : [];
+		if(i > m[h]) m[h] = i; 
+	}
+	return v[i];
+}
+
+function addV(v) {
+	c(c(c(r.s, v.storage, 0), v.device, 1), v.tariff, 2).push(v);
+}
+
+function a0(v, h) {
+	if(ln(v)) for(var i in v) if(v[i].value) return 0;
+	return 1;
+}
+
+function v0(v, h) {
+	var e = h < ml ? v0 : a0, d = [], c = 0, i;
+	for(i in v) {
+		++c;
+		if(e(v[i], h + 1)) d.push(i);
+		else if(m[h] < i) m[h] = i;
+	}
+	if(ln(d) == c) return 1;
+	for(i in d) delete v[d[i]];
+	return 0;
+}
+
+for(var n in raw) {
+	var v = raw[n];
+	if(n == "data") for(var i in v) addV(v[i]);
+	else r.h[n] = v;
+}
+
+if(filter) {
+	m = [0, 0, 0];
+	v0(r.s, 0);
+}
+
+r.m = m;
+return r;
+}
+
+function vT(v) {
+	var r = [v.type];
+	if(ln(v.typeE)) r.push("(" + v.typeE.join(" ") + ")");
+	if(v.func && v.func != "Instantaneous") r.push("(" + v.func + ")");
+	return r.join(" ");
+}
+
+function renderState(c) {
+
+var h = [], u = {};
+if(c) {
+	var n = c.unit, i, t;
+	if(n) for(i in n) {
+		t = n[i];
+		if(t.l && t.m) u[t.l] = t.m;
+	}
+} 
+
+function p(d) {h.push(d);}
+
+function e(v) {return hTd(escH(v));}
+
+function cs(i) {
+	return i > 0 ? hA("colspan", i) : null;
+}
+
+function r(i, v, t) {
+	var s = t - i;
+	p(hTr((i > 0 ? hTd("", cs(i)) : "") + hTd(hT(v, "b", hA("style", "color:#BBF")), s > 1 ? cs(s) : null)));
+}
+
+function s(v, m, l) {
+	var i, t;
+	for(i in v) {
+		t = v[i];
+		if(l < ln(H)) {
+			if(m[l]) r(l, H[l] + " " + i, 5);
+			s(t, m, l + 1);
+		} else p(hTr(hTd("", cs(3)) + e(vT(t)) + e(t.value + oa(t.unit))));
+	}
+}
+
+function rM(d) {
+	p("<table>");
+	p(hTr(hT(d.l, "th", cs(5))));
+	p(hTr(sNc(hTd(), 5)));
+	if(!d.v) p(hTr(hTd(d.e || "Error", cs(5))));
+	else try {
+		var m = tMbus(d.v, u, 1), i, v;
+		for(i in m.h) if(["c", "ci", "l", "fixed", "status", "len"].indexOf(i) < 0) p(hTr(hTd("", cs(3)) + e(s2S(i)) + e(m.h[i])));
+		s(m.s, m.m, 0);
+	} catch(x) {
+		p(hTr(hTd("Parsing Error: " + x, cs(5))));
+	}
+	p("</table><br/>");
+}
+
+ge("ld").style.display = "none";
+var a = c ? c.gpio : [], i, d;
+for(i in a) {
+	d = a[i];
+	if(d && d.c == "meter") rM(d);
+}
+sh(ge("cmds"), h.join('\n'));
+
+}
+
+function updateState(cfg) {
+	function r() {
+		renderState(cfg);
+	}
+	if(!cfg) return r();
+	var i = -1, d;
+	function g() {
+		do {
+			if(++i >= ln(cfg.gpio)) return r();
+			d = cfg.gpio[i];
+		} while(d.a < 0 || d.a > 250);
+		mbus("5B" + b2hs(d.a), function(re, s) {
+			if(s == 200) d.v = re.split('\n')[1];
+			else d.e = re || "Offline";
+			g();
+		});
+	}
+	g();
+}
+
+function onBodyLoad() {
+	http("/pState", "", function(t, s) {
+		sh(ge("stat"), s == 200 ? "" : t);
+		updateState(s == 200 ? js2j(t) : null);
+	});
+}
+
+</script>
+</head>
+<body>
+<h4><div id="stat"/></h4>
+<section><div id="ld"></div><div id="cmds"></div></section>
+<script>
+window.onload = function() {
+	var j = document.createElement("script");
+	j.src = "ju.js";
+	j.onload = onBodyLoad;
+	document.body.appendChild(j);
+};
+</script>
+</body>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<head>
+<meta charset=utf-8>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {box-sizing:border-box}
+body {font-family:Arial,sans-serif; background:#000; color:#88D}
+input {max-width:12rem; width:100%}
+table {width:100%}
+tr:nth-child(even) {background:#222}
+th {background:blue; color:#fff}
+</style>
+<title>M-Bus</title>
+<script>
+
+var cid = 0;
+
+function send() {
+	var c = ric(ge("log").insertRow(1));
+	sh(c(), ++cid);
+	sh(c(), time());
+	var i = c(), o = c(), h = c(), t = gv(ge("cmd")), x = ge("crc").checked, d;
+	try {
+		d = hexSum(t, x);
+	} catch(e) {
+		sh(i, t);
+		sh(o, e);
+		return;
+	}
+	sh(i, hexSum(t, x, " "));
+	http("/send?cmd=" + uri(d), "", function(re, s) {
+		if(s == 200) {
+			var r = re.split('\n');
+			sh(o, (r[1].match(/.{1,2}/g) || []).join(" "));
+			sh(h, r[0]);
+		} else sh(o, re);
+	});
+}
+
+function onBodyLoad() {
+	ge("cmd").focus();
+}
+</script>
+</head>
+<body>
+<h2>Send command via M-Bus:</h2>
+<input type="text" id="cmd" onkeyup="if(event.key === 'Enter') send();"/>
+<button type="button" onClick="send();">Submit</button><br/>
+<input type="checkbox" id="crc" checked>Make M-Bus Frame (Specify only C, A, [CI, [User Data]] fields)</input>
+<table id="log">
+<tr><th>ID</th><th>Time</th><th>Command</th><th>Output</th><th>Heap</th></tr>
+</table>
+<script>
+window.onload = function() {
+	var j = document.createElement("script");
+	j.src = "ju.js";
+	j.onload = onBodyLoad;
+	document.body.appendChild(j);
+};
+</script>
+</body>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<head>
+<meta charset=utf-8>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {box-sizing:border-box}
+body {font-family:Arial,sans-serif; background:#000; color:#88D}
+form {background:#234; display:block}
+table.btn {table-layout:fixed}
+input[type="text"] {max-width:15rem; width:100%}
+.progress {width:100%; text-align:center; color:#fff; background-image:linear-gradient(#88D, #88D),linear-gradient(#234, #234); background-repeat:no-repeat; transition: 1s; visibility:hidden}
+.rotate {text-align:center; white-space:nowrap;	vertical-align:middle; width:1.5rem}
+.rotate div {-moz-transform:rotate(-90.0deg); -o-transform:rotate(-90.0deg); -webkit-transform:rotate(-90.0deg); transform:rotate(-90.0deg); margin-left:-9rem;	margin-right:-9rem}
+@media only screen and (max-width:30rem) {body {margin: 0}}
+</style>
+
+<title>Configure Devices</title>
+<script>
+
+var N = null, F = {gpio: "meter", unit: "conv"};
+
+function row(btn) {
+
+function p(e, t) {
+	while(e.nodeName != t) e = e.parentNode;
+	return e;
+}
+
+var n = gv(btn), r = p(p(btn, "TABLE"), "TR"), b = p(r, "TBODY");
+
+function c(o) {
+	b.insertBefore(r, o);
+	var s = gt(r, "input"), i = ln(s);
+	while(i-- > 0) if(gv(s[i]) == n) {
+		s[i].focus();
+		break;
+	}
+}
+
+return {
+	remove: function() {
+		b.removeChild(r);
+	},
+
+	down: function() {
+		var i = 0, e = r;
+		while(i < 2 && e) {
+			e = e.nextSibling;
+			if(e && e.nodeName == "TR") ++i;
+		}
+		c(e);
+	},
+
+	up: function() {
+		var l = b.firstChild, i = l;
+		while(i != r) {
+			l = i, i = i.nextSibling;
+			while (i && i.nodeName != "TR") i = i.nextSibling;
+		}
+		c(l);
+	}
+};
+};
+
+function genM(d) {
+	return hT(hT(hFRow("Label:", hInputT(N, 'l', d ? d.l : ''))
+		+ hFRow("Address:", hInputT(N, 'a', d ? d.a : '0'))
+		+ hInputH(N, 't', 'MB') + hInputH(N, 'c', 'meter'), 'table'), 'form');
+}
+
+function hS(n, a, d) {
+	var o = [], v, i, s = d ? d[n] : N;
+	for(i in a) o.push(hO(duri(v = a[i]), v == s ? "selected" : N));
+	return hT(o.join(""), "select", hA("name", n) + (s ? hA("value", s) : ""));
+}
+
+function genC(d) {
+	var c = unitConv();
+	return hT(hT(hFRow("Unit:", hS('l', c.getUnits(), d))
+		+ hFRow("Prefix:", hS('m', c.getPrefixes(), d))
+		+ hInputH(N, 'c', 'conv'), 'table'), 'form');
+}
+
+function addCtl(t) {
+	var c = ric(ge(t).insertRow()), l = c(), b = c(), s = c(), d = c(), o = 'onclick="row(this).';
+	l.classList.add("rotate");
+	sh(l, hT(hB(s2S(t)), "div"));
+	sh(s, hT(hTr(hTd(hInputB(N, N, "/\\", o + 'up();"')) + hTd(" ")
+		+ hT(hInputB(N, N, "X", o + 'remove();" tabindex="-1"'), "td", 'rowspan="2"'))
+		+ hTr(hTd(hInputB(N, N, "\\/", o + 'down();"'))), 'table', 'class="btn"'));
+	return b;
+}
+
+function gen(t) {
+	return t ? {meter: genM, conv: genC}[t] : N;
+}
+
+function addControl() {
+	var n = ge("nc");
+	if(n) {
+		var t = gv(n), f = gen(t);
+		if(f) sh(addCtl(t), f());
+	}
+}
+
+function retab(c, t) {
+	var i, d, f, e, u;
+	for(i in c) if((d = c[i]) && d.c && (f = gen(d.c))) {
+		e = addCtl(d.c);
+		sh(e, f(d));
+		u = gt(e, "form")[0];
+		sv(u.elements["l"], duri(d.l));
+	}
+}
+
+function render(c) {
+	for(var i in F) {
+		sh(ge(F[i]), "");
+		if(c) retab(c[i], F[i]);
+	}
+}
+
+function onBodyLoad() {
+	http("/ports.json", N, function(r, s) {
+		var c = s == 200 ? eval('(' + r + ')') : N;
+		sh(ge("stat"), c ? "" : r);
+		render(c);
+	});
+}
+
+function f2json() {
+	var s = [], j;
+	for(j in F) {
+		var p = [], f = gt(ge(F[j]), "form"), e, i = 0;
+		for(; i < ln(f); ++i) if(e = f[i]) p.push(getFormJson(e));
+		s.push('"' + j + '":[\n' + p.join(',\n') + '\n]');
+	}
+	return "{" + s.join(",") + "}";	
+}
+
+function submit() {
+	var s = f2json();
+	upload("ports.json", s, function(r) {
+		var c;
+		if(r && (c = js2j(s)) && c.gpio) render(c);
+	});
+}
+
+function scan() {
+	var b = ge("sbtn"), e = ge("sprg"), i = -1, p, n = 0, t = "meter", m = gen(t);
+	e.innerText = "";
+	function f() {
+		var d = ++i < 251;
+		e.style.visibility = d ? "visible" : "hidden";
+		b.disabled = d;
+		if(d) mbus("40" + b2hs(i), function(re, s) {
+			if(s == 200 && re.split('\n')[1] == "E5") {
+				n++;
+				var l = "Meter " + i, j = js2j(f2json()), y;
+				if(j && (j = j.gpio)) for(y in j) if(j[y].a == i) l = 0;
+				if(l) sh(addCtl(t), m({l:l, a:i}));
+			}
+			f();
+		});
+		else i = 0;
+		p = Math.floor(i * 100 / 250) + "%";
+		e.style.backgroundSize = p + " 100%, 100% 100%";
+		if(i > 0) e.innerText = p + ", " + n + " found";
+	}
+	f();
+}
+
+</script>
+</head>
+
+<body>
+<h4><div id="stat">Loading...</div></h4>
+<table><tr>
+	<td><input type="button" id="sbtn" value="Scan M-Bus" onclick="scan();"/></td>
+	<td colspan="2"><div id="sprg" class="progress"></div></td>
+</tr><tr>
+	<td>New Control:</td>
+	<td><select id="nc">
+		<option value="meter">M-Bus meter</option>
+		<option value="conv">Unit Converter</option>
+	</select></td>
+	<td><input type="button" value="Add" onclick="addControl();"/></td>
+</tr></table>
+<hr/>
+<table id="meter">
+</table>
+<hr/>
+<table id="conv">
+</table>
+<hr/>
+<table><tr>
+	<td><input type="button" value="Submit" onclick="submit();"/></td>
+</tr></table>
+<script>
+window.onload = function() {
+	var j = document.createElement("script");
+	j.src = "ju.js";
+	j.onload = onBodyLoad;
+	document.body.appendChild(j);
+};
+</script>
+</body>

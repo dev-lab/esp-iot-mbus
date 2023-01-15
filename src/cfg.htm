@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<head>
+<meta charset=utf-8>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {box-sizing:border-box}
+body {font-family:Arial,sans-serif; background:#000; color:#88D}
+form {background:#123; display:block}
+table {width:100%}
+td:nth-of-type(1) {width:10%}
+input[type="text"], input[type="password"] {max-width:15rem; width:100%}
+select {max-width:30rem; width:100%}
+input:read-only, input:-moz-read-only {background:#123;	border-color:#567; color:#88D}
+@media only screen and (max-width:30rem) {body {margin: 0}}
+</style>
+
+<title>Configure</title>
+<script>
+
+var N = null;
+function wfs(l, e) {
+	var i = l.selectedIndex;
+	if(i > 0) sv(ge(e), aps[i].n);
+}
+
+function wfe(e, l) {
+	var v = gv(e), i = ln(aps);
+	l = ge(l);
+	if(v != aps[l.selectedIndex].n) {
+		while(i > 0) if(aps[--i].n == v) break;
+		l.selectedIndex = i;
+	}
+}
+
+function updateStatus(sta, ap) {
+	sh(ge("staStat"), sta);
+	sh(ge("apStat"), ap);
+}
+
+function validateAp(f, p2) {
+	if(f = gv(f["pwd"]) != gv(ge(p2))) alert("Passwords entered don't match!");
+	return !f;
+}
+
+function valueMod(f, n, v) {
+	var u = gv(f["m"]), a = u == "admin";
+	return ln(v) && ((a && n == "old") || ((a || u == "user") && n == "pwd")) ? btoa(u + ":" + v) : v;
+}
+
+function genForm(n, l, o, p, r) {
+	var t = p || "", d = n + "Pwd", st = n + "Stat", e = hFRow, i = hInputP;
+	if(!o) t += e("Old password:", i(N, 'old', ''));
+	t += e("Password:", i(N, 'pwd', ''));
+	t += e("Retype password:", i(d, N, ''));
+	t += e(hButtonS("Submit" + (r?", Restart":""), "m", n),
+		hT(' ', 'div', hA('id', st)));
+	return hT(hT(l, 'h2') + '\n' + hT(t, 'table'), 'form',
+			hA('name', n) + hA('autocomplete', 'off') + hA('action', 'cfg')
+		+ hA('onsubmit', "return postForm(this, '/cfg?m=" + n
+			+ "', validateAp, '" + d + "', '" + st
+			+ "', " + (r ? "staRefresh" : N) + ", valueMod);")
+		+ hA('method', 'POST'));
+}
+
+function staRefresh(re, s) {
+	if(s == 200) setTimeout(function() {postForm(dc.forms["sta"], "/cfgSta", N, N, N, staHandler);}, 10000);
+}
+
+function ap(n, d) {
+	d = d.split(',');
+	d[0] = ["Open", "WEP", "WPA", "WPA2", "WPA+WPA2"][d[0]];
+	return {
+		s: d[1],
+		n: n,
+		d: n + " (" + d[0] + ", " + d[1] + "dBm, " + d[2] + ", CH:" + d[3] + ")"
+	};
+}
+
+function staHandler(t, s) {
+	if(s != 200) {
+		updateStatus(t, t);
+		return;
+	}
+	var l = ge("wf"), e = ge("ssid"), M = ", netmask:", G = ", gateway:";
+	l.disabled = e.disabled = !1;
+	var r = js2j(t), h = hO(""), x = 0, n = r.stat, i;
+	aps = [];
+	if(r.aps) {
+		for(i in r.aps) {
+			x = 1;
+			aps.push(ap(i, r.aps[i]));
+		}
+	}
+	aps.sort(function(a, b) {return b.s - a.s;});
+	for(i = 0; i < ln(aps); ++i) h += hO(aps[i].d);
+	aps.unshift("");
+	sh(l, h);
+	l.selectedIndex = x;
+	sv(e, aps[x].n);
+	updateStatus(n.ls + " ip:" + n.ip + M + n.nm + G + n.gw,
+		n.als + (n.aip ? " ip:" + n.aip + M + n.anm + G + n.agw : ""));
+	l.focus();
+}
+
+function onBodyLoad() {
+	var ap = hFRow("Name:", hInputT(N, 'ssid', N))
+		+ hFRow("Setup only:", hInput('checkbox', N, 'opt', '1', 'checked') + "Disable Access Point on successful connection to Wireless Network.");
+	sh(ge("forms"), genForm('ap', 'Setup Wi-Fi access point:', 1, ap, 1)
+		+ genForm('admin', 'Change admin password:')
+		+ genForm('user', 'Change user password:', 1));
+	postForm(dc.forms["sta"], "/cfgSta", N, N, N, staHandler);
+}
+</script>
+</head>
+<body>
+<form name="sta" autocomplete="off" action="cfg" method="POST" onsubmit="return postForm(this, '/cfg?m=sta', null, null, 'staStat', staRefresh);">
+<h2>Connect to wireless network:</h2>
+<table>
+	<tr><td><b>Name:</b></td>
+		<td><input disabled type="text" id="ssid" name="ssid" onkeyup="wfe(this, 'wf')"/>
+		<select disabled id="wf" onChange="wfs(this, 'ssid')" onkeyup="wfs(this, 'ssid')">
+			<option>Loading...</option>
+		</select></td>
+	</tr><tr><td><b>Password:</b></td>
+		<td><input type="text" name="pwd" value=""></td>
+	</tr><tr><td><button type="submit" value="sta" name="m">Connect</button></td>
+		<td><div id="staStat"></div></td>
+	</tr>
+</table>
+</form>
+<div id="forms" />
+<script>
+window.onload = function() {
+	var j = document.createElement("script");
+	j.src = "ju.js";
+	j.onload = onBodyLoad;
+	document.body.appendChild(j);
+};
+</script>
+</body>

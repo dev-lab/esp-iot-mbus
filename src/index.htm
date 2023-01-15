@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<head>
+<meta charset=utf-8>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html, body {font-family:Arial,sans-serif; margin:0; background:#000; color:#88D; height:100%; display:flex; flex-direction:column}
+iframe {flex:1}
+a {padding:0.2rem; -webkit-border-radius:3px; -moz-border-radius:3px; border-radius:3px; background:#111}
+a:hover {background:#888}
+</style>
+<title>M-Bus</title>
+<script>
+function ld(f) {
+	var w = f.contentWindow, a = document.getElementsByTagName('a'), i = a.length;
+	document.title = "M-Bus " + w.document.title;
+	while(i-- > 0) a[i].style.background = a[i].href == w.location.href ? "#CCC" : "#111";
+}
+</script>
+</head>
+<body>
+<table><tr>
+<th><a href="ctl.htm" target="f">Control</a></th>
+<th><a href="cfg.htm" target="f">Configure</a></th>
+<th><a href="cfgPort.htm" target="f">Devices</a></th>
+<th><a href="mbus.htm" target="f">M-Bus</a></th>
+<th><a href="ide.htm" target="f">IDE</a></th>
+</tr></table><br/>
+<iframe src="ctl.htm" name="f" style="border:none" onload="ld(this)"></iframe>
+</body>
