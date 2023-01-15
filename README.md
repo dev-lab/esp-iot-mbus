@@ -61,7 +61,7 @@ Here are 3D views of the components on the PCB (front and back, but without ESP-
 
 
 ### Enclosure for PCB modules
-The enclosure to house the M-Bus interface and Y4169 DC-DC converter modules can be 3D printed. It is posted on [Thingiverse](https://thingiverse.com), but also included [here](./enclosure/) ([bottom part](./enclosure/mbus-wifi-bottom.stl), [top part](./enclosure/mbus-wifi-top.stl)).
+The enclosure to house the M-Bus interface and Y4169 DC-DC converter modules can be 3D printed. It is posted on [Thingiverse](https://www.thingiverse.com/thing:5789887), but also included [here](./enclosure/) ([bottom part](./enclosure/mbus-wifi-bottom.stl), [top part](./enclosure/mbus-wifi-top.stl)).
 Below are a few images showing how the M-Bus gateway and step-up DC-DC converer are placed in the case.
 
 Assembled, the bottom part is visible:
