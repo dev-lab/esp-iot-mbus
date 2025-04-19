@@ -45,8 +45,8 @@ I have modified the circuit for my needs, as follows:
 The circuit is powered by a 5V power supply (a standard 5V 1A micro-USB adapter from an old phone), so step-up DC/DC converter was used to get +36V. I used a Y4169 module, but any module (such as based on XL6019 or XL6009) capable of generating 36V DC from 5V DC should work. Just remember to adjust the module with a variable resistor to produce 36V DC from 5V.
 
 #### Hardware Notes
-* Based on feedback from @hallard in #1, if a connected M-Bus device draws more than **4UL** (unit loads -- a unit load is 1.5mA), communication issues may occur. Reducing resistor **R14** to as low as **47Ω** may help.
-* The M-Bus line can operate with a **24 V** power supply, as confirmed by @hallard, particularly when only one device is connected and the cable is not too long — which is typically acceptable in simple setups.
+* Based on feedback from [@hallard](https://github.com/hallard) in [issue #1](https://github.com/dev-lab/esp-iot-mbus/issues/1), if a connected M-Bus device draws more than **4UL** (unit loads -- a unit load is 1.5mA), communication issues may occur. Reducing resistor **R14** to as low as **47Ω** may help.
+* The M-Bus line can operate with a **24 V** power supply, as confirmed by [@hallard](https://github.com/hallard), particularly when only one device is connected and the cable is not too long — which is typically acceptable in simple setups.
 
 ### PCB
 If you have the same ancient types of transistors (that haven't done anything on the shelves for many decades), you can use the old-school through-hole [hand-drawn] PCB I designed here:
